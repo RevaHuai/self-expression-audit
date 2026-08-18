@@ -1,0 +1,549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expression Audit State",
+  "description": "State file for the self-expression-audit skill. Tracks progress across modules, stores raw Q&A, tension log, prototype anchors, and compiled outputs. This is the system's spine — all continuity between sessions flows through this file.",
+  "type": "object",
+  "required": ["version", "subject", "mode", "progress", "rawData"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version. Increment when state structure changes. Current: 1.0",
+      "default": "1.0"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Name or identifier of the person being interviewed"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["quick", "core", "deep"],
+      "description": "The mode selected for this session"
+    },
+    "completedModes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["quick", "core", "deep"]
+      },
+      "description": "All modes the subject has completed. Used to determine upgrade eligibility."
+    },
+    "progress": {
+      "type": "object",
+      "description": "Per-module progress tracking. Each key is a module ID.",
+      "properties": {
+        "D0": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D1": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D2": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D5": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D6": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D3": {
+          "$ref": "#/$defs/moduleProgress"
+        },
+        "D7": {
+          "$ref": "#/$defs/moduleProgress"
+        }
+      },
+      "additionalProperties": false
+    },
+    "prototypeAnchors": {
+      "type": "object",
+      "description": "Three-tier prototype hypothesis tracking. Each anchor records the hypothesis, evidence, and confirmation status.",
+      "properties": {
+        "anchor1": {
+          "$ref": "#/$defs/anchor",
+          "description": "After D0 completes. Initial hypothesis formed from identity signals."
+        },
+        "anchor2": {
+          "$ref": "#/$defs/anchor",
+          "description": "After D2 completes. Hypothesis refined using expression mechanism data. Replaces original D3/D4 anchor."
+        },
+        "anchor3": {
+          "$ref": "#/$defs/anchor",
+          "description": "After all modules complete. Final confirmation or pivot."
+        }
+      },
+      "additionalProperties": false
+    },
+    "tensionLog": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tensionEntry"
+      },
+      "description": "Cross-module contradictions and tensions. Each entry records a conflict between answers from different modules. This is the core material for prototype evaluation and the final report."
+    },
+    "coreIdentity": {
+      "type": ["object", "null"],
+      "description": "Synthesized core identity statement. Null until enough data is collected. Updated at each prototype anchor.",
+      "properties": {
+        "statement": {
+          "type": "string",
+          "description": "2-3 sentence core identity summary"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["preliminary", "moderate", "high"],
+          "description": "How confident the system is in this statement based on data collected"
+        },
+        "basedOnQuestions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Question IDs that contributed to this identity statement"
+        }
+      }
+    },
+    "quickReference": {
+      "type": ["object", "null"],
+      "description": "Quick Reference Card — the subject's expression rules in 3 categories. Null until sufficient data.",
+      "properties": {
+        "always": {
+          "type": "array",
+          "items": {"type": "string"},
+          "maxItems": 5,
+          "description": "Things the subject always does in their expression"
+        },
+        "never": {
+          "type": "array",
+          "items": {"type": "string"},
+          "maxItems": 5,
+          "description": "Things the subject never does in their expression"
+        },
+        "signatureMoves": {
+          "type": "array",
+          "items": {"type": "string"},
+          "maxItems": 3,
+          "description": "Distinctive expression techniques or approaches the subject uses"
+        }
+      }
+    },
+    "resonanceLog": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/resonanceEntry"},
+      "description": "Tracks the subject's resonance level with each person/idea mentioned during D0. Levels: admiration → recognition → identification → direction. See modules/resonance-detector.md"
+    },
+    "resonancePoints": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/resonancePoint"},
+      "description": "Nodes in the influence graph that produced strong identification-level resonance. These are potential north star candidates."
+    },
+    "candidateNorthStar": {
+      "type": ["object", "null"],
+      "description": "The current best hypothesis for the subject's north star, derived from the discovery loop.",
+      "properties": {
+        "direction": {"type": "string", "description": "The de-personalized direction statement"},
+        "level": {
+          "type": "string",
+          "enum": ["admiration", "recognition", "identification", "direction"],
+          "description": "Current resonance level of this candidate"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Question IDs and resonance log IDs that support this candidate"
+        },
+        "stressTestResult": {
+          "type": ["object", "null"],
+          "description": "Results of the 5-item stress test (noAudience, noMoney, noFame, noTemplate, tenYears)",
+          "properties": {
+            "noAudience": {"type": "boolean"},
+            "noMoney": {"type": "boolean"},
+            "noFame": {"type": "boolean"},
+            "noTemplate": {"type": "boolean"},
+            "tenYears": {"type": "boolean"},
+            "allPassed": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "northStarLoop": {
+      "type": ["object", "null"],
+      "description": "Tracks progress through the 8-round North Star Discovery Loop. See modules/north-star-discovery-loop.md",
+      "properties": {
+        "currentRound": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9,
+          "description": "Current round (1-9). Null if loop not started."
+        },
+        "completedRounds": {
+          "type": "array",
+          "items": {"type": "integer"},
+          "description": "Rounds that have been completed"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "De-personalized candidate directions generated during the loop"
+        },
+        "resumeFrom": {
+          "type": "string",
+          "description": "Human-readable description of where to resume"
+        }
+      }
+    },
+    "northStarHistory": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/northStarVersion"},
+      "description": "Version history of the subject's north star. Each entry records a confirmed or revised north star."
+    },
+    "knowledgeGraph": {
+      "type": ["object", "null"],
+      "description": "The influence graph built during knowledge archaeology. A graph (not tree) of people, books, theories, eras, and traditions that influenced the subject's north star candidates. See modules/knowledge-archeology.md",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/graphNode"},
+          "description": "Nodes in the influence graph (people, books, theories, eras, traditions)"
+        },
+        "edges": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/graphEdge"},
+          "description": "Directed edges showing influence relationships"
+        },
+        "resonanceNodes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Node IDs that produced strong resonance (identification or direction level)"
+        }
+      }
+    },
+    "learningPath": {
+      "type": ["object", "null"],
+      "description": "Recommended learning path derived from the knowledge graph.",
+      "properties": {
+        "directReading": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/readingItem"},
+          "description": "Books/articles directly cited by the subject's north star figures"
+        },
+        "prerequisiteReading": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/readingItem"},
+          "description": "Background knowledge needed to understand second-order influences"
+        },
+        "comparativeReading": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/readingItem"},
+          "description": "Pairs of thinkers who answer the same question differently"
+        },
+        "nextExploration": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Suggested next directions for exploring the influence chain"
+        }
+      }
+    },
+    "rawData": {
+      "type": "object",
+      "description": "The sole source of truth for all answers. Keyed by question ID (Q1-Q108). Each entry stores the question, answer, depth level, and any follow-ups.",
+      "additionalProperties": {
+        "$ref": "#/$defs/questionAnswer"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Operational metadata. Not part of the analysis output.",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sessionCount": {
+          "type": "integer",
+          "description": "Number of sessions/interactions with this subject"
+        },
+        "lastModuleRun": {
+          "type": "string",
+          "description": "ID of the last module that was run"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any operational notes for the interviewer"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "moduleProgress": {
+      "type": "object",
+      "required": ["status", "totalQuestions", "answeredQuestions", "availableQuestions"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not_started", "partial", "complete"],
+          "description": "not_started: no questions answered. partial: some answered. complete: all required questions answered."
+        },
+        "totalQuestions": {
+          "type": "integer",
+          "description": "Total number of questions in this module"
+        },
+        "answeredQuestions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Question IDs that have been answered (e.g. ['Q1', 'Q13', 'Q18'])"
+        },
+        "availableQuestions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "All question IDs in this module (e.g. ['Q1'-'Q18'])"
+        }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "hypothesis_formed", "confirmed", "pivoted"],
+          "description": "pending: not yet evaluated. hypothesis_formed: initial hypothesis recorded. confirmed: hypothesis validated by subsequent data. pivoted: hypothesis changed based on new data."
+        },
+        "hypothesis": {
+          "type": "string",
+          "description": "The prototype hypothesis at this anchor point"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Question IDs and brief notes of evidence supporting the hypothesis"
+        },
+        "contradictions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Tension log IDs that challenge or nuance this hypothesis"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "tensionEntry": {
+      "type": "object",
+      "required": ["id", "description", "sourceQuestions", "resolved"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^T[0-9]+$",
+          "description": "Unique tension ID, auto-incremented (T1, T2, T3...)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the tension/contradiction"
+        },
+        "sourceQuestions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 2,
+          "description": "Question IDs that create this tension (e.g. ['Q1', 'Q49'])"
+        },
+        "modules": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Which modules this tension spans (e.g. ['D0', 'D3'])"
+        },
+        "resolution": {
+          "type": "string",
+          "description": "How this tension was resolved or interpreted (if resolved)"
+        },
+        "resolved": {
+          "type": "boolean",
+          "description": "Whether this tension has been addressed in the final output"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "questionAnswer": {
+      "type": "object",
+      "required": ["question", "answer", "depth"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The exact question text asked"
+        },
+        "answer": {
+          "type": "string",
+          "description": "The subject's verbatim answer"
+        },
+        "depth": {
+          "type": "string",
+          "enum": ["quick", "core", "deep"],
+          "description": "The depth level at which this question was answered. quick = no follow-up. core = with follow-ups. deep = fully explored."
+        },
+        "followUps": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Follow-up questions asked and the subject's responses, interleaved"
+        },
+        "upgraded": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this answer was deepened during a mode upgrade (quick→core or core→deep)"
+        },
+        "module": {
+          "type": "string",
+          "description": "Which module this question belongs to (e.g. 'D0')"
+        },
+        "density": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "How many structural dimensions this answer reveals (1-5). Populated during compilation."
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Structural dimensions illuminated by this answer (e.g. ['identity', 'belief', 'aspiration'])"
+        }
+      }
+    },
+    "resonanceEntry": {
+      "type": "object",
+      "required": ["id", "person", "level", "triggerQuestion", "evidence"],
+      "properties": {
+        "id": {"type": "string", "description": "Unique ID (R1, R2, ...)"},
+        "round": {"type": "integer", "description": "Which round of the discovery loop this was detected in"},
+        "person": {"type": "string", "description": "The person or idea this resonance is about"},
+        "level": {
+          "type": "string",
+          "enum": ["admiration", "recognition", "identification", "direction"],
+          "description": "Resonance level"
+        },
+        "upgraded": {"type": "boolean", "description": "Whether this resonance level was upgraded from a lower level"},
+        "previousLevel": {
+          "type": "string",
+          "enum": ["admiration", "recognition", "identification", "direction"],
+          "description": "Previous level before upgrade (if upgraded)"
+        },
+        "triggerQuestion": {"type": "string", "description": "Which question triggered this resonance detection"},
+        "triggerPhrase": {"type": "string", "description": "The exact phrase that triggered detection"},
+        "evidence": {"type": "string", "description": "Brief evidence from the answer"}
+      }
+    },
+    "resonancePoint": {
+      "type": "object",
+      "required": ["person", "level"],
+      "properties": {
+        "person": {"type": "string", "description": "Name of the person/idea"},
+        "level": {
+          "type": "string",
+          "enum": ["identification", "direction"],
+          "description": "Must be identification or direction to be a resonance point"
+        },
+        "order": {"type": "integer", "description": "Order in the influence chain (1=first-order, 2=second-order, etc.)"},
+        "reason": {"type": "string", "description": "Why this was marked as a resonance point"}
+      }
+    },
+    "northStarVersion": {
+      "type": "object",
+      "required": ["version", "date", "statement", "context", "evidence"],
+      "properties": {
+        "version": {"type": "integer", "description": "Version number (1, 2, 3...)"},
+        "date": {"type": "string", "format": "date", "description": "Date this version was confirmed"},
+        "statement": {"type": "string", "description": "The north star statement at this version"},
+        "context": {"type": "string", "description": "Context in which this was confirmed (e.g. '首次审计，核心模式')"},
+        "evidence": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Question IDs and round IDs that contributed"
+        },
+        "changeNote": {
+          "type": "string",
+          "description": "If this is a revision, what changed from the previous version"
+        }
+      }
+    },
+    "graphNode": {
+      "type": "object",
+      "required": ["name", "type", "order"],
+      "properties": {
+        "name": {"type": "string", "description": "Name of the node (person, book, theory, era, tradition)"},
+        "type": {
+          "type": "string",
+          "enum": ["person", "book", "theory", "era", "tradition"],
+          "description": "Type of node"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Influence order: 0=source, 1=first-order, 2=second-order, 3=third-order"
+        },
+        "resonance": {
+          "type": "string",
+          "enum": ["admiration", "recognition", "identification", "direction"],
+          "description": "Resonance level detected"
+        },
+        "materialType": {
+          "type": "string",
+          "enum": ["form", "method", "source"],
+          "description": "Material type: form (一阶), method (二阶), source (三阶)"
+        },
+        "source": {"type": "string", "description": "Which question or round revealed this node"},
+        "keyWorks": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Key works associated with this node"
+        },
+        "keyIdeas": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Core ideas associated with this node"
+        },
+        "influencedBy": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Names of nodes that influence this one"
+        }
+      }
+    },
+    "graphEdge": {
+      "type": "object",
+      "required": ["from", "to", "type"],
+      "properties": {
+        "from": {"type": "string", "description": "Source node name"},
+        "to": {"type": "string", "description": "Target node name"},
+        "type": {
+          "type": "string",
+          "enum": ["influenced_by", "co_cited", "member_of"],
+          "description": "influenced_by: A influenced B. co_cited: A and B both cited C. member_of: A belongs to tradition B"
+        },
+        "description": {"type": "string", "description": "Brief description of the relationship"}
+      }
+    },
+    "readingItem": {
+      "type": "object",
+      "required": ["title", "reason"],
+      "properties": {
+        "title": {"type": "string", "description": "Book/article title"},
+        "author": {"type": "string", "description": "Author name"},
+        "reason": {"type": "string", "description": "Why this is recommended"},
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"],
+          "description": "Estimated reading difficulty"
+        },
+        "startingPoint": {
+          "type": "string",
+          "description": "Suggested starting chapters/sections"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
