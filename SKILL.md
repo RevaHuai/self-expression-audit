@@ -437,6 +437,78 @@ Tension Log              Tension Log              Tension Log
 - 北极星发现循环（9轮收敛算法）：`modules/north-star-discovery-loop.md`
 - 四级共振检测（Admiration/Recognition/Identification/Direction）：`modules/resonance-detector.md`
 
+## 更新 Skill
+
+### 触发方式
+
+```
+更新自我表达审计 Skill
+```
+
+或
+
+```
+self-expression-audit update
+```
+
+### 更新流程
+
+```
+用户触发更新
+    │
+    ▼
+系统运行 scripts/update.sh
+    │
+    ▼
+检查远程仓库是否有新提交
+    │
+    ├── 无更新 → 报告"已是最新版本"，结束
+    │
+    └── 有更新
+        │
+        ▼
+    显示更新内容（commit 列表）
+        │
+        ▼
+    检测本地状态文件（interview state files）
+        │
+        ├── 有未完成的访谈 → 自动备份到 state/.backup/[timestamp]/
+        │
+        ▼
+    拉取远程更新（git pull --rebase）
+        │
+        ▼
+    状态文件保留在本地（不受更新影响）
+        │
+        ▼
+    报告更新完成 + 最新 commit 摘要
+```
+
+### 安全措施
+
+- **状态文件不受更新影响**：更新只覆盖 Skill 的模块文件、脚本和文档，不触碰 `state/` 目录中的访谈数据
+- **自动备份**：更新前自动备份状态文件到 `state/.backup/`，保留最近 3 次
+- **回滚能力**：如果更新后出现问题，可以从备份恢复状态文件
+- **手动恢复命令**：
+  ```
+  cp state/.backup/[timestamp]/*-state.json state/
+  ```
+
+### 手动更新
+
+如果自动更新脚本无法运行，可以手动更新：
+
+```bash
+cd {skill-install-path}
+git pull origin main
+```
+
+### 更新日志
+
+更新日志见 GitHub Releases：https://github.com/guihuai0552/self-expression-audit/releases
+
+---
+
 ## Anti-Overfitting 原则
 
 本 Skill 的使用者有两条必须遵守的规则：
