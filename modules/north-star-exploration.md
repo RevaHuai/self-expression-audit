@@ -12,7 +12,7 @@
 
 北极星深度探索是一个**分析引擎**。它：
 
-- **读取** D0 板块已有的问答数据（`rawData` 中 D0 的 18 道题答案）
+- **读取** 当前模式 D0 coverage 已完成的问答（quick 仅 Q1/Q13/Q18；core/deep 为 Q1–Q18）
 - **分析** 用户的北极星候选、影响图谱、共振模式
 - **输出** 综合分析报告，包括北极星卡片、影响图谱、学习路径推荐
 - **不问新问题**——不增加新的问答环节
@@ -27,23 +27,29 @@
 
 ### 1.3 前置检查
 
-**D0 必须完成。** 如果 D0 未完成，引导用户先完成 D0：
+以**当前模式的 D0 coverage** 为准，不是一律 18 题：
+
+| 模式 | D0 必覆盖 | 分析密度 |
+|------|-----------|----------|
+| `quick` | Q1, Q13, Q18（3 题） | `preliminary`：可跑，但标数据不足；完整图谱/学习路径建议升级 core |
+| `core` / `deep` | Q1–Q18（18 题） | 完整分析 |
+
+**当前模式 D0 coverage 未完成**时引导继续访谈（不要用 18 当 quick 的分母）：
 
 ```
-你的北极星深度探索需要基于 D0（北极星与身份定位）的完整数据。
-目前 D0 只完成了 [X]/18 题。
+北极星深度探索要先完成当前模式的 D0 覆盖。
+现在是 {mode} 模式，D0 已完成 [X]/[Y]（Y = 该模式 coverage 中的 D0 题数）。
 
-建议你先完成 D0，完成后可以直接对我说：
-"深度探索我的北极星"
-
+先把这块问完，再说「深度探索我的北极星」。
 要继续 D0 吗？
 ```
 
 **检查逻辑：**
-- 读取状态文件 `expression-audit-state.json`
-- 检查 `progress.D0.status` 是否为 `"complete"`
-- 如果为 `"partial"` 或 `"not_started"`，显示上述引导语
-- 如果为 `"complete"`，进入分析流程
+- 读取 `{workspace}/expression-audit/{subject}.state.json`
+- 看 `coverage` 里 `module == D0` 的子集是否全部 `done`（等价于 `progress.D0.status == "complete"`）
+- 未完成 → 显示上面的引导，**不问新的分析题**
+- 已完成 → 进入分析；quick 输出必须带 `confidence: preliminary`，并提示升级 core 才能用满 Q1–Q18
+- 分析过程 **仍然不问新题**
 
 ---
 
@@ -52,7 +58,8 @@
 ### 2.1 总览
 
 ```
-输入：D0 rawData（18道题答案）+ 状态文件
+输入：当前模式 D0 coverage 对应的 rawData + 状态文件
+（quick 只有 3 题信号；core/deep 才有 18 题）
   ↓
 步骤 1：共振检测
   ↓ 输出：共振日志、共振点、候选北极星
@@ -552,7 +559,7 @@
 ### 8.1 前置检查
 
 ```
-1. 读取状态文件 expression-audit-state.json
+1. 读取状态文件 {subject}.state.json（expression-audit/）
 2. 检查 progress.D0.status
 3. 如果 status != "complete"：
    - 显示引导语

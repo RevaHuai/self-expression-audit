@@ -1,238 +1,109 @@
-# 自我表达审计 Skill
+# 自我表达审计
 
-> 通过深度对话完成自我表达审计，产出可作为 AI 语境底座的自我表达文档。
+用**访谈**挖清表达结构：提纲必覆盖，脉络可衍生。  
+交付可拆分导出、可持久化的 **对话报告** 与 **审计报告**。
 
----
+**你即你的表达。** 这是自我发现工具，不是品牌包装器，也不做人格测评。
 
-## 核心理念
-
-**你即你的表达。** "你"和"你的表达"是同一件事。
-
-本 Skill 不是一个"品牌建设工具"，而是一个**自我发现和教育工具**。它帮助你更清晰地看见自己的表达结构——你相信什么、你如何沟通、你的边界在哪里、你的独特之处是什么。
-
-**核心原则：最少问题暴露最多结构。** 每道题尽量同时照亮多个结构维度（身份、信念、审美、恐惧、表达机制、受众关系、矛盾、深层渴望）。
+仓库：https://github.com/RevaHuai/self-expression-audit
 
 ---
 
-## 三种运行模式
+## 口径
 
-| 模式 | 题量 | 时间 | 覆盖 | 产出 |
-|---|---|---|---|---|
-| **快速（体检）** | 10 | ~25min | 6 个板块的高密度精选 | 精简报告 + 升级邀请 |
-| **核心（完整审计）** | 70 | ~2h | D0+D1+D2+D5+D6 | 完整报告（初步原型评估）|
-| **深度（深度审计）** | 95 | ~2.5-3h | 核心全部 + D3+D7 | 完整报告（复核原型评估）|
+| 概念 | 值 |
+|------|-----|
+| 有效提纲 | **95** 题（编号 Q1–Q108；**Q61–Q73 空号**，原 D4 已删） |
+| quick | 10（含 Q96） |
+| core | 70（D0+D1+D2+D5+D6，不含 D3/D7） |
+| deep | 95（core + D3 + D7） |
 
-### 模式选择建议
-
-- **第一次使用** → 快速模式。10 道题给你一个初步的自我认知快照。
-- **认真做自我探索** → 核心模式。70 道题完成完整的表达语境文档。
-- **想要最完整的自我认知** → 深度模式。95 道题追加审美和辨别力维度。
+提纲是覆盖清单，不是播放列表。真源：[`references/numbering.md`](references/numbering.md)。
 
 ---
 
-## 如何启动
+## 安装
 
-### 快速模式
+把本仓库放到 Agent 的 Skill 目录即可，例如：
 
-```
-使用自我表达审计 Skill 进行快速体检
-```
-
-### 核心模式
-
-```
-使用自我表达审计 Skill 进行核心审计
+```bash
+git clone https://github.com/RevaHuai/self-expression-audit.git
 ```
 
-### 深度模式
+访谈数据写在**工作区** `{workspace}/expression-audit/`，不进本仓库。
 
-```
-使用自我表达审计 Skill 进行深度审计
-```
+---
 
-### 恢复上次进度
+## 对 Agent 说
 
-```
+```text
+使用自我表达审计，核心模式，subject 叫 Alice
 继续我的自我表达审计
-```
-
-系统会自动检测到未完成的状态文件，询问是否继续上次的模式或升级到更深模式。
-
-### 升级模式
-
-```
-升级到核心模式
-```
-
-```
+先出报告 / 只要对话报告 / 只要审计报告
 升级到深度模式
+导出到 exports
 ```
 
-### 北极星深度探索
+脚本（可选）：
 
-完成 D0（北极星与身份定位）后，可以触发独立的分析能力：
-
+```bash
+python3 scripts/init_state.py --workspace "$PWD" --subject Alice --mode core
+python3 scripts/validate_coverage.py --workspace "$PWD" --subject Alice
+python3 scripts/export_reports.py --workspace "$PWD" --subject Alice --only both
+python3 scripts/upgrade_mode.py --workspace "$PWD" --subject Alice --to deep
 ```
-深度探索我的北极星
-```
-
-或
-
-```
-北极星分析
-```
-
-**前置要求：** D0 必须完成（18 题全部答完）。如果 D0 未完成，系统会引导你先完成 D0。
-
-**性质：** 这不是提问模块，不是 D0 的延续。它是一个**分析引擎**——读取 D0 已有的数据，输出综合分析报告，不问新问题。
-
-**分析内容：**
-- 共振检测（四级：佩服 → 认出 → 认同 → 方向）
-- 影响图谱构建（人物 / 书籍 / 理论 / 传统的网络）
-- 北极星发现循环复盘（9 轮收敛算法）
-- 知识考古（素材分层 + 学习路径推荐）
-- 北极星卡片生成（完整的多维度自我描述）
-- 压力测试验证（五项检验推断）
-
-**输出：** 综合分析报告 + 可单独导出的北极星卡片
 
 ---
 
-## 模块结构
+## 落盘
 
-| 模块 | 文件 | 题量 | 说明 |
-|---|---|---|---|
-| D0 北极星 | `modules/D0-polaris.md` | 18 | 必选入口，建立语境底座 |
-| 北极星深度探索 | `modules/north-star-exploration.md` | — | D0 完成后的独立分析引擎——综合分析北极星、影响图谱、学习路径 |
-| D1 信念 | `modules/D1-beliefs.md` | 15 | 揭示价值观、立场和愿景（Belief → Position → Vision） |
-| D2 表达机制 | `modules/D2-mechanism.md` | 15 | 揭示实际沟通方式 |
-| D5 内容架构 | `modules/D5-architecture.md` | 12 | 揭示节律和策略 |
-| D6 绝对禁区 | `modules/D6-taboo.md` | 10 | 揭示边界、身份和反愿景（Boundary → Identity → Anti-Vision） |
-| D3 审美禁区 | `modules/D3-aesthetics.md` | 12 | 扩展模块，可选 |
-| D7 危险信号 | `modules/D7-danger-signals.md` | 13 | 扩展模块，可选 |
-
-### 依赖链
-
-```
-D0 (18) ← 所有模块的入口
-  ├── D1 (15) ← 高依赖 D0
-  ├── D2 (15) ← 中依赖 D0
-  ├── D5 (12) ← 轻依赖 D0
-  ├── D6 (10) ← 高依赖 D0
-  ├── D3 (12) ← 扩展模块，核心完成后可选
-  └── D7 (13) ← 扩展模块，核心完成后可选
+```text
+{workspace}/expression-audit/
+├── {subject}.state.json     # 唯一真源
+├── {subject}.dialogue.md    # 对话报告（给人回顾）
+├── {subject}.audit.md       # 审计报告（人 + 下游 Skill）
+└── exports/                 # 可选时间戳副本
 ```
 
-**D0 不能拆。** 它是所有后续板块的语境底座。
-
-**D6 不能早拆。** 禁区问题需要前面板块建立的信任积累。
-
-### 愿景与反愿景系统
-
-D1 和 D6 不仅是独立的板块，它们共同构成一个完整的**价值立场系统**：
-
-- **D1（信念与反共识）** 负责挖**愿景**：从"我相信什么"延伸到"我希望世界变成什么样"
-- **D6（绝对禁区）** 负责挖**反愿景**：从"我绝不做什么"延伸到"我绝不希望世界变成什么样"
-
-层级结构：信念 → 立场 → 愿景 ↔ 反愿景 → 行动原则
-
-理论锚点：Fred Polak《The Image of the Future》——北极星是一个人脑中的「未来意象」，不是目标，而是产生行动方向的源头。Peter Senge 的 Positive/Negative Vision——两者结合才是完整的价值立场，不是逃跑，而是有方向的站立。趋近—逃避结构（Approach / Avoidance Motivation）——愿景是趋近方向，反愿景是逃避方向，两者必须同时存在。
-
-最终收敛物是四句话：我相信__。所以我希望__。我绝不希望世界变成__。因此我选择__。这四句话对应 Belief → Vision → Anti-Vision → Practice，是一个人所有选择的底层操作系统。
-
-详见 `modules/D1-beliefs.md` 和 `modules/D6-taboo.md` 的板块说明和追问规则。
+下游只读 audit 的 YAML frontmatter（`schema: expression-audit-report`）。  
+字段见 [`references/consumer-contract.md`](references/consumer-contract.md)。
 
 ---
 
-## 状态文件
+## 仓库结构
 
-系统的脊柱。所有跨会话连续性、模式升级、断点续做都依赖这个文件。
-
-### 文件位置
-
-```
-{workspace}/.claude/skills/self-expression-audit/state/[subject-name]-state.json
+```text
+.
+├── SKILL.md                 # Agent 入口：循环、硬规则、停止条件
+├── README.md
+├── references/              # 口径、调度、编译、下游契约
+├── modules/                 # 题面（D0–D3, D5–D7）
+├── quick-mode/              # quick 十题
+├── proto-system/            # 锚点流程（无十二型词典）
+├── schemas/state.schema.json
+├── state-schema.json        # 根目录兼容副本
+├── scripts/                 # init / validate / export / upgrade / update
+├── evals/                   # 行为契约样本（不是 Level 3 通过证明）
+└── compiler/compile.md      # 兼容入口 → references/compile.md
 ```
 
-### 状态文件包含
+---
 
-- 所有已回答题目的原始记录（逐字问答 + 追问记录）
-- 各板块的完成进度
-- 三阶原型锚点的假设和验证历史
-- 跨板块矛盾（张力日志）
-- 核心身份陈述
-- 快速参考卡
+## 更新
 
-### 升级规则
+```bash
+bash scripts/update.sh          # 交互确认
+bash scripts/update.sh --yes    # 非交互；工作区必须干净
+```
 
-- **升级不丢数据**：快速模式的答案在核心/深度模式下完整保留
-- **升级不重答题**：已答过的题不会被重复提问
-- **升级追加追问**：系统可能对已有答案追加追问（标记为"深化追问"）
+- 不改写 `git remote origin`
+- 有未提交改动会拒绝
+- 不会清理 `expression-audit/` 里的访谈数据
 
 ---
 
-## 产出文档
+## 版本
 
-### 快速报告
-
-包含：
-- 核心身份（初步推断，标注"基于 10 题"）
-- 快速画像（表达风格、核心驱动力、显著特征、盲区提示）
-- Quick Reference Card（简化版）
-- 张力速览（1-2 条）
-- 原始问答（10 题逐字记录）
-- **升级邀请**
-
-### 核心报告
-
-包含：
-- Interview Mode（模式记录）
-- Core Identity（基于 70 题）
-- 原型评估（初步，阶段 L1/L2）
-- Section 0-6（D0-D2-D5-D6 完整问答）
-- Quick Reference Card（完整版）
-- Tension Log（完整）
-- Anti-Overfitting Guide
-- **升级邀请**（到深度模式）
-
-### 深度报告
-
-结构与核心报告**相同**，但：
-- Core Identity 基于 95 题（更精确）
-- 原型评估标注"复核后"，置信度更高
-- Quick Reference Card 数据更丰富
-- Tension Log 追加 D3/D7 的矛盾
-- Section 3（D3）和 Section 7（D7）完整问答
-
----
-
-## 通用访谈规则
-
-1. **一次一个问题**：永远不同时抛出两道题
-2. **追问含糊回答**：泛泛而谈、引用他人、否定式回答都需要追问
-3. **指出矛盾**：温和地照亮回答之间的张力，不评判
-4. **不提供选项**：不替用户想答案
-5. **记录原文**：不做实时总结，完整记录原始回答
-6. **保持好奇心**：语气是探索性的，不是审判性的
-
----
-
-## 原型锚点
-
-三阶原型评估系统，在你单独设计的表达者原型系统基础上运行：
-
-| 锚点 | 时机 | 输出 |
-|---|---|---|
-| 锚点 1 | D0 完成后 | 初步假设（阶段 L1）|
-| 锚点 2 | D2 完成后 | 精炼假设（阶段 L2）|
-| 锚点 3 | 全部完成后 | 最终确认（阶段 L3）|
-
----
-
-## 扩展阅读
-
-- `state-schema.json` — 状态文件格式定义
-- `modules/north-star-exploration.md` — 北极星深度探索分析引擎（共振检测、影响图谱、知识考古、北极星卡片）
-- `proto-system/prototype-anchors.md` — 原型锚点详细逻辑
-- `compiler/compile.md` — 报告编译逻辑和模板
-- `quick-mode/questions.md` — 快速模式 10 题详情
+- **v2.1**：95 题口径 / 空号 Q61–Q73；schema 2.1；双报告与安全更新脚本
+- **v2**：访谈引擎 + workspace 落盘 + 下游契约
+- 题库文案沿用 v1，调度语义升级

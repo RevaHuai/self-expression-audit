@@ -1,0 +1,15 @@
+.DS_Store
+**/.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.backup/
+.claude/
+
+# Interview data lives in the workspace, never in this package
+state/
+expression-audit/
+*.state.json
+
+# Local dump, not a source of truth (modules/ + references/outline.md are)
+题目汇总.md

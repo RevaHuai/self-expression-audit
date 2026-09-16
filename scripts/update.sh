@@ -1,143 +1,133 @@
 #!/usr/bin/env bash
-# self-expression-audit 自更新脚本
-# 用法: bash scripts/update.sh
+# self-expression-audit 自更新
+# 用法:
+#   bash scripts/update.sh          # 交互确认
+#   bash scripts/update.sh --yes    # 非交互（工作区必须干净）
 #
-# 功能：
-# 1. 检查远程仓库是否有新提交
-# 2. 如果有更新，备份本地状态文件
-# 3. 拉取远程更新
-# 4. 恢复状态文件
-# 5. 报告更新内容
+# 安全约束：
+# - 不改写 git remote origin（以当前 origin 为准）
+# - 工作区有未提交改动则拒绝；不 stash，避免更新后不 pop 导致改动消失
+# - 访谈数据在 workspace/expression-audit/，不在本 skill 包内
+# - 若设置 EXPRESSION_AUDIT_DIR，更新前备份其中的 *.state.json
 
-set -e
+set -euo pipefail
 
-# 定位 skill 根目录（脚本所在目录的上一级）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
-STATE_DIR="$SKILL_DIR/state"
-REMOTE_URL="https://github.com/guihuai0552/self-expression-audit.git"
+YES=false
+if [ "${1:-}" = "--yes" ] || [ "${1:-}" = "-y" ]; then
+    YES=true
+fi
 
-echo "🔍 检查 self-expression-audit 更新..."
+echo "检查 self-expression-audit 更新..."
 echo ""
 
-# 进入 skill 目录
 cd "$SKILL_DIR"
 
-# 检查是否有 git 仓库
 if [ ! -d ".git" ]; then
-    echo "⚠️  未检测到 git 仓库。此脚本需要 skill 通过 git 克隆安装。"
-    echo "   如果你是通过手动方式安装的，请手动同步：git pull origin main"
+    echo "未检测到 git 仓库。此脚本需要 skill 通过 git 克隆安装。"
+    echo "手动安装请自行同步上游，不要改 remote。"
     exit 1
 fi
 
-# 确保远程仓库配置正确
-CURRENT_REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
-if [ "$CURRENT_REMOTE" != "$REMOTE_URL" ]; then
-    echo "📡 配置远程仓库地址..."
-    git remote set-url origin "$REMOTE_URL"
+CURRENT_REMOTE="$(git remote get-url origin 2>/dev/null || true)"
+if [ -z "$CURRENT_REMOTE" ]; then
+    echo "没有 origin remote。请先配置后再更新；本脚本不会写入远程地址。"
+    exit 1
+fi
+echo "远程 origin: $CURRENT_REMOTE"
+echo "（本脚本不会 set-url。若地址不对，请人工修改。）"
+echo ""
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "工作区有未提交改动，拒绝自动更新。"
+    echo "请先提交或自行 stash，再重跑本脚本。"
+    git status -sb
+    exit 2
 fi
 
-# 获取远程信息
-git fetch origin main 2>/dev/null || {
-    echo "❌ 无法连接到远程仓库。请检查网络连接。"
-    exit 1
-}
+git fetch origin
 
-LOCAL_COMMIT=$(git rev-parse HEAD)
-REMOTE_COMMIT=$(git rev-parse origin/main)
+DEFAULT_BRANCH=""
+if git rev-parse --abbrev-ref origin/HEAD >/dev/null 2>&1; then
+    DEFAULT_BRANCH="$(git rev-parse --abbrev-ref origin/HEAD | sed 's#^origin/##')"
+fi
+if [ -z "$DEFAULT_BRANCH" ] || ! git rev-parse --verify "origin/${DEFAULT_BRANCH}" >/dev/null 2>&1; then
+    if git rev-parse --verify origin/main >/dev/null 2>&1; then
+        DEFAULT_BRANCH="main"
+    elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+        DEFAULT_BRANCH="master"
+    else
+        echo "无法确定远程默认分支。"
+        exit 1
+    fi
+fi
+
+LOCAL_COMMIT="$(git rev-parse HEAD)"
+REMOTE_COMMIT="$(git rev-parse "origin/${DEFAULT_BRANCH}")"
 
 if [ "$LOCAL_COMMIT" = "$REMOTE_COMMIT" ]; then
-    echo "✅ 已是最新版本。"
+    echo "已是最新版本。"
     echo "   本地提交: ${LOCAL_COMMIT:0:8}"
+    echo "   分支: ${DEFAULT_BRANCH}"
     exit 0
 fi
 
-echo "🆕 发现新版本！"
+echo "发现新版本："
 echo "   本地: ${LOCAL_COMMIT:0:8}"
-echo "   远程: ${REMOTE_COMMIT:0:8}"
+echo "   远程 origin/${DEFAULT_BRANCH}: ${REMOTE_COMMIT:0:8}"
+echo ""
+echo "更新内容："
+git log --oneline "${LOCAL_COMMIT}..origin/${DEFAULT_BRANCH}" | sed 's/^/   /'
 echo ""
 
-# 查看更新内容
-echo "📋 更新内容："
-echo ""
-git log --oneline "${LOCAL_COMMIT}..origin/main" | sed 's/^/   /'
-echo ""
-
-# 检查是否有未完成的访谈（状态文件）
-HAS_STATE=false
-if [ -d "$STATE_DIR" ] && ls "$STATE_DIR"/*-state.json >/dev/null 2>&1; then
-    HAS_STATE=true
-fi
-
-if [ "$HAS_STATE" = true ]; then
-    echo "⚠️  检测到未完成的访谈状态文件："
-    ls "$STATE_DIR"/*-state.json | while read f; do
-        echo "   - $(basename "$f")"
+backup_states() {
+    local src="$1"
+    local dest="$2"
+    mkdir -p "$dest"
+    local copied=0
+    shopt -s nullglob
+    for f in "$src"/*.state.json "$src"/*-state.json; do
+        [ -f "$f" ] || continue
+        cp "$f" "$dest/"
+        copied=$((copied + 1))
     done
-    echo ""
-    echo "   更新前会自动备份这些状态文件到: $STATE_DIR/.backup/"
-    echo ""
-fi
-
-# 确认更新
-echo "是否继续更新？(y/N)"
-read -r CONFIRM
-if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
-    echo "已取消更新。"
-    exit 0
-fi
-
-echo ""
-echo "🔄 正在更新..."
-
-# 备份状态文件
-if [ "$HAS_STATE" = true ]; then
-    BACKUP_DIR="$STATE_DIR/.backup/$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$BACKUP_DIR"
-    cp "$STATE_DIR"/*-state.json "$BACKUP_DIR/" 2>/dev/null || true
-    echo "   ✓ 状态文件已备份到: $BACKUP_DIR"
-fi
-
-# 暂存本地修改（如果有）
-git stash push -m "auto-stash before update $(date +%Y-%m-%d)" 2>/dev/null || true
-
-# 拉取更新
-git pull --rebase origin main 2>/dev/null || {
-    # 如果 rebase 失败，尝试普通 merge
-    echo "   ⚠️  rebase 失败，尝试普通合并..."
-    git merge origin/main --no-edit 2>/dev/null || {
-        echo "❌ 更新失败。请手动解决冲突后运行 git merge --continue"
-        exit 1
-    }
+    shopt -u nullglob
+    if [ "$copied" -gt 0 ]; then
+        echo "   已备份 ${copied} 个 state → $dest"
+    fi
 }
 
-# 恢复状态文件（备份已在，无需额外操作）
-# 但清理可能由 git 产生的冲突标记
-if [ "$HAS_STATE" = true ]; then
-    # 确保状态目录存在
-    mkdir -p "$STATE_DIR"
-    # 备份文件保留在原位，不删除
-    echo "   ✓ 状态文件已保留"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+if [ -n "${EXPRESSION_AUDIT_DIR:-}" ] && [ -d "$EXPRESSION_AUDIT_DIR" ]; then
+    echo "备份 EXPRESSION_AUDIT_DIR=$EXPRESSION_AUDIT_DIR"
+    backup_states "$EXPRESSION_AUDIT_DIR" "$EXPRESSION_AUDIT_DIR/.backup/${STAMP}"
+fi
+if [ -d "$SKILL_DIR/state" ]; then
+    echo "备份遗留 skill/state/"
+    backup_states "$SKILL_DIR/state" "$SKILL_DIR/state/.backup/${STAMP}"
 fi
 
-echo ""
-echo "✅ 更新完成！"
-echo ""
-echo "📊 更新摘要："
-echo ""
-git log --oneline -5 2>/dev/null | sed 's/^/   /' || echo "   (无法获取提交历史)"
-echo ""
-
-# 清理备份（保留最近 3 次）
-if [ -d "$STATE_DIR/.backup" ]; then
-    BACKUP_COUNT=$(ls -d "$STATE_DIR/.backup"/*/ 2>/dev/null | wc -l)
-    if [ "$BACKUP_COUNT" -gt 3 ]; then
-        echo "🧹 清理旧备份（保留最近 3 次）..."
-        ls -dt "$STATE_DIR/.backup"/*/ 2>/dev/null | tail -n +4 | while read d; do
-            rm -rf "$d"
-        done
+if [ "$YES" != true ]; then
+    if [ ! -t 0 ]; then
+        echo "非交互环境：请附加 --yes 才会 pull。"
+        exit 3
+    fi
+    echo "是否继续更新（fast-forward only）？(y/N)"
+    read -r CONFIRM
+    if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+        echo "已取消更新。"
+        exit 0
     fi
 fi
 
 echo ""
-echo "提示：如果在更新后遇到问题，可以从备份恢复状态文件。"
+echo "正在 fast-forward 到 origin/${DEFAULT_BRANCH}..."
+git pull --ff-only origin "$DEFAULT_BRANCH"
+
+echo ""
+echo "更新完成。"
+echo "最近提交："
+git log --oneline -5 | sed 's/^/   /'
+echo ""
+echo "访谈数据在 workspace/expression-audit/，不会随 skill 更新被覆盖。"

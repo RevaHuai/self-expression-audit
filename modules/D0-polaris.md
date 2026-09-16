@@ -9,6 +9,9 @@ modeRequirements:
   deep: [Q1-Q18]
 ---
 
+> **调度声明（v2）：** 本文件是题面与追问细则库。题号是覆盖索引，不是对用户播放的顺序。下一问由 `references/interview-engine.md` 按脉络选择；有效题 95 道，Q61–Q73 为空号，见 `references/numbering.md`。
+
+
 ## 板块说明
 
 D0 是系统的入口和语境底座。所有后续板块都建立在 D0 建立的身份语境之上。
@@ -98,7 +101,7 @@ D0 建立了被访谈者的"坐标系"。没有这个坐标系，后续板块中
 > 如果有——这个"共同出现"本身可能就是信号。你想进一步了解这个交汇点吗？
 
 > **触发条件：** 用户在 Q4-Q5 中追踪了 2 层以上，且两条链出现了共同名字。
-> **追问方向：** 如果用户说"想了解"，激活完整知识考古能力（见 `knowledge-archeology.md`）。
+> **追问方向：** 如果用户说"想了解"，激活完整知识考古能力（见 `modules/north-star-exploration.md`）。
 
 **Q-A2. 素材分层检验**
 
@@ -296,7 +299,7 @@ D0 建立了被访谈者的"坐标系"。没有这个坐标系，后续板块中
 - 升级不可逆——标记为 Identification 后不会降回 Recognition
 - 达到 Direction 层级后，记录到 `candidateNorthStar`，在板块结束时触发压力测试
 
-**详细规范：** 见 `resonance-detector.md`
+**详细规范：** 见 `modules/north-star-exploration.md`
 
 ---
 
@@ -330,7 +333,7 @@ B 受谁影响？B 的『北极星』是谁？"
 - 每层追溯后必须同步执行规则3（剥离式追问）
 - 追踪到 3 层后自动退出知识考古模式，回到 D0 主线
 
-**详细规范：** 见 `knowledge-archeology.md`
+**详细规范：** 见 `modules/north-star-exploration.md`
 
 **触发 D0 题目：** Q1、Q2、Q4、Q5、Q6（这些题目天然涉及人物追溯）
 
@@ -408,7 +411,7 @@ B 受谁影响？B 的『北极星』是谁？"
 - 有 1-2 项不确定 → 标记为"待验证"，在核心模式中追加追问
 - 有 3 项以上失败 → 返回 Round 6 重新收敛候选方向
 
-**详细规范：** 见 `north-star-discovery-loop.md` Round 8
+**详细规范：** 见 `modules/north-star-exploration.md`（压力测试 / Round 8）
 
 ---
 

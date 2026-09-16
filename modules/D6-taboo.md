@@ -9,6 +9,9 @@ modeRequirements:
   deep: [Q86-Q95]
 ---
 
+> **调度声明（v2）：** 本文件是题面与追问细则库。题号是覆盖索引，不是对用户播放的顺序。下一问由 `references/interview-engine.md` 按脉络选择；有效题 95 道，Q61–Q73 为空号，见 `references/numbering.md`。
+
+
 ## 板块说明
 
 D6 挖掘被访谈者的绝对边界——那些"我绝对不会做的事"。这个板块的价值在于：**一个人的边界定义了他的身份。**

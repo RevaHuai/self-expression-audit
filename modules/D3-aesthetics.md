@@ -9,6 +9,9 @@ modeRequirements:
   deep: [Q49-Q60]
 ---
 
+> **调度声明（v2）：** 本文件是题面与追问细则库。题号是覆盖索引，不是对用户播放的顺序。下一问由 `references/interview-engine.md` 按脉络选择；有效题 95 道，Q61–Q73 为空号，见 `references/numbering.md`。
+
+
 ## 板块说明
 
 D3 挖掘被访谈者的审美边界——什么让他们感到不适、什么是"活的" vs "死的"表达、以及在审美选择上的不可妥协偏好。

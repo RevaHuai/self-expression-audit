@@ -9,6 +9,9 @@ modeRequirements:
   deep: [Q34-Q48]
 ---
 
+> **调度声明（v2）：** 本文件是题面与追问细则库。题号是覆盖索引，不是对用户播放的顺序。下一问由 `references/interview-engine.md` 按脉络选择；有效题 95 道，Q61–Q73 为空号，见 `references/numbering.md`。
+
+
 ## 板块说明
 
 D2 挖掘被访谈者的实际沟通方式——不是你以为的，而是你实际怎么做的。这个板块的数据直接用于锚点 2 的精炼。

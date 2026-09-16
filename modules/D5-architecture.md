@@ -9,6 +9,9 @@ modeRequirements:
   deep: [Q74-Q85]
 ---
 
+> **调度声明（v2）：** 本文件是题面与追问细则库。题号是覆盖索引，不是对用户播放的顺序。下一问由 `references/interview-engine.md` 按脉络选择；有效题 95 道，Q61–Q73 为空号，见 `references/numbering.md`。
+
+
 ## 板块说明
 
 D5 挖掘被访谈者的内容节律和组织逻辑——在不同时间尺度上如何组织表达，长短内容的关系，以及表达背后的结构性策略。
